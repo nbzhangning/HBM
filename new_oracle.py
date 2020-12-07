@@ -14,25 +14,47 @@ import urllib.request
 import base64
 import json
 import os
-import time
+# import cx_Oracle as oracle
+
 import xlwt
 
+import time
+
+
+def gettime():
+   # 获取当前时间并转为字符串
+   timestr = time.strftime("%D-%H:%M:%S")
+   # 重新设置标签文本
+   lb.configure(text="当前时间："+ timestr +"  注意休息 请勿熬夜")
+   # 每隔一秒调用函数gettime自身获取时间
+   root.after(1000, gettime)
 
 root = Tk()
-root.title("煎饼滴百宝箱2.3-20201021");
+root.title("煎饼滴百宝箱2.62-20201207");
 root.geometry("510x300");
+root.resizable(0,0)   #禁止调整窗口大小
+#######1118
+# tk.Label(root, text='运行进度:', ).place(x=50, y=60)
+# canvas = tk.Canvas(root, width=300, height=20, bg="white")
+# canvas.place(x=400, y=600)
+#######1118
+
 
 photo =PhotoImage(file="LOGO.gif")
 imglabel=Label(root,image=photo)
+
+# 设置字体大小颜色
+lb = tkinter.Label(root, text='', fg='black',font=("黑体", 10))
+lb.pack(side=BOTTOM)  ##这里的side可以赋值为LEFT  RTGHT TOP  BOTTOM
+gettime()
+
 imglabel.pack()
+
 
 
 def callback():
     print('调用')
 menubar = Menu(root)
-
-
-
 
 
 
@@ -248,7 +270,9 @@ def appendStr5():#计算发出商品
     df25 = pd.read_excel(tkinter.filedialog.askopenfilename());
 
     #df26 = df25.groupby("货品ID")["未开票数量"].sum();#0702暂时修改为未发票数量
-    df26 = df25.groupby("货品ID")["未开票数量"].sum();
+    #修改列名1201
+    df251 = df25.rename(columns={'未结算数量': '未开票数量'});
+    df26 = df251.groupby("货品ID")["未开票数量"].sum();
 
     #df26 = pd.merge(df23, df25, right_index=True, left_index=True);
     df27 = pd.merge(df26, df24,how='left',on=['货品ID'] );#完全相同合并，忽略没有的货品ID(没有how)
@@ -6979,7 +7003,7 @@ def appendStr83():  # 月末销售-英克-金蝶核对
 
 
 
-def appendStr84():  # 月末销售-英克-金蝶核对
+def appendStr84():  # 信用控制带英克ID
  try:
       tkinter.messagebox.showinfo("提醒", "请选择控制表源文件");
 
@@ -6988,16 +7012,19 @@ def appendStr84():  # 月末销售-英克-金蝶核对
       df2 = pd.read_excel('http://nbhealth.eicp.net:14692/khysb.xlsx')
       df3 = pd.merge(df1, df2, how='left', on=['客户名称'])
 
+      df4 =  df3.drop_duplicates(['英克代码'])
+      df5 = df4.drop(df4.columns[[[[[[[[[[[[[[[[[[[[[[[[0, 1, 2, 3, 4, 5, 6,7, 8, 9,10, 11, 12, 13,14,15,16,17,18,20,21,22]]]]]]]]]]]]]]]]]]]]]]]], axis=1);
+      df5['英克ID']=df5['英克代码']+'，'
+      df6 = df5.drop(df5.columns[0],axis=1);
 
+      print('开始写入txt文件...')
+      df6.to_csv('本月客户信用英克ID.txt', header=None, sep=',', index=False)  # 写入，逗号分隔
+      print('文件写入成功!')
 
-
-
-
-      df3.to_excel(excel_writer=tkinter.filedialog.asksaveasfilename(title="请创建或者选择一个保存数据的Excel文件",
-                                                                    filetypes=[("Microsoft Excel文件", "*.xlsx"),
-                                                                               (
-                                                                               "Microsoft Excel 97-20003 文件", "*.xls")],
-                                                                    defaultextension=".xlsx"), sheet_name="表1");
+      # df5.to_excel(excel_writer=tkinter.filedialog.asksaveasfilename(title="请创建或者选择一个保存数据的Excel文件",
+      #                                                               filetypes=[("Microsoft Excel文件", "*.xlsx"),
+      #                                                                          ("Microsoft Excel 97-20003 文件", "*.xls")],
+      #                                                               defaultextension=".xlsx"), sheet_name="表1",index=False);
       tkinter.messagebox.showinfo("运行结果", "导出成功！");
 
  except Exception as error:
@@ -7014,8 +7041,12 @@ def appendStr85():  # 月末毛利分析
       df2 = df1.groupby(['客户','货品ID','三级分类'])["销售成本","基本单位数量","价额"].sum();
       df2.reset_index(inplace=True)  # 取消合并
 
+
       d2 = df1.groupby(['客户', '货品ID', '三级分类','保管账名称'])["销售成本", "基本单位数量", "价额"].sum();
       d2.reset_index(inplace=True)  # 取消合并
+      #####单体
+      da2 = df1.groupby(['客户', '货品ID', '三级分类'])["销售成本", "基本单位数量", "价额"].sum();
+      da2.reset_index(inplace=True)  # 取消合并
 
 
       tkinter.messagebox.showinfo("提醒", "请选择浙江源文件");
@@ -7026,6 +7057,9 @@ def appendStr85():  # 月末毛利分析
 
       d4 = df3.groupby(['客户', '货品ID', '三级分类','保管账名称'])["销售成本", "基本单位数量", "价额"].sum();
       d4.reset_index(inplace=True)  # 取消合并
+      #####单体
+      da4 = df3.groupby(['客户', '货品ID', '三级分类'])["销售成本", "基本单位数量", "价额"].sum();
+      da4.reset_index(inplace=True)  # 取消合并
 
       tkinter.messagebox.showinfo("提醒", "请选择上海诊断源文件");
       df5 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
@@ -7035,6 +7069,9 @@ def appendStr85():  # 月末毛利分析
 
       d6 = df5.groupby(['客户', '货品ID', '三级分类','保管账名称'])["销售成本", "基本单位数量", "价额"].sum();
       d6.reset_index(inplace=True)  # 取消合并
+      #####单体
+      da6 = df5.groupby(['客户', '货品ID', '三级分类'])["销售成本", "基本单位数量", "价额"].sum();
+      da6.reset_index(inplace=True)  # 取消合并
 
       tkinter.messagebox.showinfo("提醒", "请选择上海器械源文件");
       df7 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
@@ -7044,6 +7081,9 @@ def appendStr85():  # 月末毛利分析
 
       d8 = df7.groupby(['客户', '货品ID', '三级分类','保管账名称'])["销售成本", "基本单位数量", "价额"].sum();
       d8.reset_index(inplace=True)  # 取消合并
+      #####单体
+      da8 = df7.groupby(['客户', '货品ID', '三级分类'])["销售成本", "基本单位数量", "价额"].sum();
+      da8.reset_index(inplace=True)  # 取消合并
 
       tkinter.messagebox.showinfo("提醒", "请选择恒奇诊断源文件");
       df9 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
@@ -7053,7 +7093,9 @@ def appendStr85():  # 月末毛利分析
 
       d10 = df9.groupby(['客户', '货品ID', '三级分类','保管账名称'])["销售成本", "基本单位数量", "价额"].sum();
       d10.reset_index(inplace=True)  # 取消合并
-
+      #####单体
+      da10 = df9.groupby(['客户', '货品ID', '三级分类'])["销售成本", "基本单位数量", "价额"].sum();
+      da10.reset_index(inplace=True)  # 取消合并
    ######组合1-5
 
 
@@ -7061,34 +7103,23 @@ def appendStr85():  # 月末毛利分析
       ##################
 
       df20 = pd.concat([df2,df4,df6,df8,df10],ignore_index=True)
-      d20 = pd.concat([d2, d4, d6, d8, d10], ignore_index=True)    #d20加了保管账
+      d20 = pd.concat([d2, d4, d6, d8, d10], ignore_index=True)    #d20加了保管账     ####11-10导出单体明细
    ######关联方区分  生物加恒奇诊断
       ####10-19 去掉伯乐指控,010501质控试剂（代理）
 
-
-
       df40 = d20.loc[d20['保管账名称'].str.contains('海尔施生物')]
       d40 = df40[df40["三级分类"] != '010501质控试剂（代理）']
-
       d41 = d20.loc[d20['保管账名称'].str.contains('01配件保管账')]
-
 
       #01配件保管账
 
       df41 = d20.loc[d20['保管账名称'].str.contains('江苏恒奇保管账')]
-
       df42 = df41[df41["三级分类"] == '010501质控试剂（代理）']
-
-
       df43 =pd.concat([d40,d41,df42],ignore_index=True)
-
-
 
       # d42 = df42[df42["客户"] != '海尔施生物医药股份有限公司']
       # d43 = d42[d42["客户"] != '江苏恒奇诊断产品有限公司']
       # d44 = d43[d43["客户"] != '江苏恒奇诊断产品有限公司（固定资产）']
-
-
 
       df44 = df43.groupby(['货品ID'])["销售成本","基本单位数量"].sum();   #去掉客户
       df44.reset_index(inplace=True)  # 取消合并
@@ -7097,9 +7128,6 @@ def appendStr85():  # 月末毛利分析
       # df44.to_excel(excel_writer="d:/1020.xlsx",
       #            sheet_name="测试1",
       #            index = False);
-
-
-
 
       # df44 = df43.rename(columns={'销售成本': '关联销售成本','基本单位数量':'关联基本单位数量','价额':'关联价格'});
       df45 = df44.drop(["基本单位数量","销售成本"], axis=1)
@@ -7172,6 +7200,13 @@ def appendStr85():  # 月末毛利分析
       df68["采购成本"]=df68["采购进价"]*df68["基本单位数量"]
       #######开始汇总非关联方
 
+      #######单体公司11-10分析
+
+
+
+      # 3-医药 新加d12
+
+
       # df69 = df68[df68["关联方"] != "是"]
       #
       # df70 = df69.groupby(['大类','二级分类'])["价额","基本单位数量","采购进价"].sum();   #去掉客户
@@ -7191,40 +7226,632 @@ def appendStr85():  # 月末毛利分析
                                                                     defaultextension=".xlsx"), sheet_name="成本分析明细");
       tkinter.messagebox.showinfo("运行结果", "明细导出成功！");
 
+      ###d2包含保管账开始
+      # 1-生物d2
 
+      sw49 = da2[da2["客户"] != '宁波海尔施基因科技有限公司']
+      sw50 = sw49.loc[sw49['客户'].str.contains('海尔施')]
+      sw50["关联方"] = '是'
+      sw51 = sw49.loc[sw49['客户'].str.contains('恒奇诊断')]
+      sw51["关联方"] = '是'
+      sw52 = sw49.loc[sw49['客户'].str.contains('宁波美晶')]
+      sw52["关联方"] = '是'
+      sw53 = sw49.loc[sw49['客户'].str.contains('海壹生物')]
+      sw53["关联方"] = '是'
+      sw54 = sw49.loc[sw49['客户'].str.contains('强盛生物')]
+      sw54["关联方"] = '是'
+      sw55 = sw49.loc[sw49['客户'].str.contains('杭州金诺')]
+      sw55["关联方"] = '是'
 
+      sw60 = pd.concat([sw50, sw51, sw52, sw53, sw54, sw55], ignore_index=True)
+      # sw601 = d2.drop(["基本单位数量"], axis=1)
+      sw61 = pd.merge(da2, sw60, how='outer', on=['客户', '货品ID', '三级分类', '销售成本','价额','基本单位数量']);
+      sw61["毛利"] = sw61["价额"] - sw61["销售成本"]
+      sw62 = sw61.fillna({"关联方": "否"})
+      sw63 = sw62.groupby(['三级分类'])["销售成本","价额","毛利"].sum();
+      sw64 = pd.merge(sw62, df63, how='left', on=['三级分类']);#63是输入
+      sw65 = sw64.groupby(['大类'])["销售成本","价额","毛利"].sum();
 
+      write = pd.ExcelWriter("生物毛利分析" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx")
+
+      sw62.to_excel(write, sheet_name='单体明细')
+      sw63.to_excel(write, sheet_name='三级分类')
+      sw65.to_excel(write, sheet_name='大类')
+      write.save()
+      write.close()
+      time.sleep(5)
+      # tkinter.messagebox.showinfo("运行结果", "完成！");
+
+      # 2-浙江d4
+      zj49 = da4[da4["客户"] != '宁波海尔施基因科技有限公司']
+      zj50 = zj49.loc[zj49['客户'].str.contains('海尔施')]
+      zj50["关联方"] = '是'
+      zj51 = zj49.loc[zj49['客户'].str.contains('恒奇诊断')]
+      zj51["关联方"] = '是'
+      zj52 = zj49.loc[zj49['客户'].str.contains('宁波美晶')]
+      zj52["关联方"] = '是'
+      zj53 = zj49.loc[zj49['客户'].str.contains('海壹生物')]
+      zj53["关联方"] = '是'
+      zj54 = zj49.loc[zj49['客户'].str.contains('强盛生物')]
+      zj54["关联方"] = '是'
+      zj55 = zj49.loc[zj49['客户'].str.contains('杭州金诺')]
+      zj55["关联方"] = '是'
+
+      zj60 = pd.concat([zj50, zj51, zj52, zj53, zj54, zj55], ignore_index=True)
+      # zj601 = d2.drop(["基本单位数量"], axis=1)
+      zj61 = pd.merge(da4, zj60, how='outer', on=['客户', '货品ID', '三级分类', '销售成本', '价额','基本单位数量']);
+      zj61["毛利"] = zj61["价额"] - zj61["销售成本"]
+      zj62 = zj61.fillna({"关联方": "否"})
+      zj63 = zj62.groupby(['三级分类'])["销售成本", "价额", "毛利"].sum();
+      zj64 = pd.merge(zj62, df63, how='left', on=['三级分类']);  # 63是输入
+      zj65 = zj64.groupby(['大类'])["销售成本", "价额", "毛利"].sum();
+
+      write = pd.ExcelWriter("浙江毛利分析" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx")
+
+      zj62.to_excel(write, sheet_name='单体明细')
+      zj63.to_excel(write, sheet_name='三级分类')
+      zj65.to_excel(write, sheet_name='大类')
+      write.save()
+      write.close()
+      time.sleep(5)
+      # 4-上海器械d8
+      shqx49 = da8[da8["客户"] != '宁波海尔施基因科技有限公司']
+      shqx50 = shqx49.loc[shqx49['客户'].str.contains('海尔施')]
+      shqx50["关联方"] = '是'
+      shqx51 = shqx49.loc[shqx49['客户'].str.contains('恒奇诊断')]
+      shqx51["关联方"] = '是'
+      shqx52 = shqx49.loc[shqx49['客户'].str.contains('宁波美晶')]
+      shqx52["关联方"] = '是'
+      shqx53 = shqx49.loc[shqx49['客户'].str.contains('海壹生物')]
+      shqx53["关联方"] = '是'
+      shqx54 = shqx49.loc[shqx49['客户'].str.contains('强盛生物')]
+      shqx54["关联方"] = '是'
+      shqx55 = shqx49.loc[shqx49['客户'].str.contains('杭州金诺')]
+      shqx55["关联方"] = '是'
+
+      shqx60 = pd.concat([shqx50, shqx51, shqx52, shqx53, shqx54, shqx55], ignore_index=True)
+      # shqx601 = d2.drop(["基本单位数量"], axis=1)
+      shqx61 = pd.merge(da8, shqx60, how='outer', on=['客户', '货品ID', '三级分类', '销售成本','价额','基本单位数量']);
+      shqx61["毛利"] = shqx61["价额"] - shqx61["销售成本"]
+      shqx62 = shqx61.fillna({"关联方": "否"})
+      shqx63 = shqx62.groupby(['三级分类'])["销售成本", "价额", "毛利"].sum();
+      shqx64 = pd.merge(shqx62, df63, how='left', on=['三级分类']);  # 63是输入
+      shqx65 = shqx64.groupby(['大类'])["销售成本", "价额", "毛利"].sum();
+
+      write = pd.ExcelWriter("上海器械毛利分析" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx")
+
+      shqx62.to_excel(write, sheet_name='单体明细')
+      shqx63.to_excel(write, sheet_name='三级分类')
+      shqx65.to_excel(write, sheet_name='大类')
+      write.save()
+      write.close()
+      time.sleep(5)
+      # 5-上海诊断d6
+      shzd49 = da6[da6["客户"] != '宁波海尔施基因科技有限公司']
+      shzd50 = shzd49.loc[shzd49['客户'].str.contains('海尔施')]
+      shzd50["关联方"] = '是'
+      shzd51 = shzd49.loc[shzd49['客户'].str.contains('恒奇诊断')]
+      shzd51["关联方"] = '是'
+      shzd52 = shzd49.loc[shzd49['客户'].str.contains('宁波美晶')]
+      shzd52["关联方"] = '是'
+      shzd53 = shzd49.loc[shzd49['客户'].str.contains('海壹生物')]
+      shzd53["关联方"] = '是'
+      shzd54 = shzd49.loc[shzd49['客户'].str.contains('强盛生物')]
+      shzd54["关联方"] = '是'
+      shzd55 = shzd49.loc[shzd49['客户'].str.contains('杭州金诺')]
+      shzd55["关联方"] = '是'
+
+      shzd60 = pd.concat([shzd50, shzd51, shzd52, shzd53, shzd54, shzd55], ignore_index=True)
+      # shzd601 = d2.drop(["基本单位数量"], axis=1)
+      shzd61 = pd.merge(da6, shzd60, how='outer', on=['客户', '货品ID', '三级分类', '销售成本','价额','基本单位数量']);
+      shzd61["毛利"] = shzd61["价额"] - shzd61["销售成本"]
+      shzd62 = shzd61.fillna({"关联方": "否"})
+      shzd63 = shzd62.groupby(['三级分类'])["销售成本", "价额", "毛利"].sum();
+      shzd64 = pd.merge(shzd62, df63, how='left', on=['三级分类']);  # 63是输入
+      shzd65 = shzd64.groupby(['大类'])["销售成本", "价额", "毛利"].sum();
+
+      write = pd.ExcelWriter("上海诊断毛利分析" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx")
+
+      shzd62.to_excel(write, sheet_name='单体明细')
+      shzd63.to_excel(write, sheet_name='三级分类')
+      shzd65.to_excel(write, sheet_name='大类')
+      write.save()
+      write.close()
+      time.sleep(5)
+      # 6-恒奇诊断d10
+      jshq49 = da10[da10["客户"] != '宁波海尔施基因科技有限公司']
+      jshq50 = jshq49.loc[jshq49['客户'].str.contains('海尔施')]
+      jshq50["关联方"] = '是'
+      jshq51 = jshq49.loc[jshq49['客户'].str.contains('恒奇诊断')]
+      jshq51["关联方"] = '是'
+      jshq52 = jshq49.loc[jshq49['客户'].str.contains('宁波美晶')]
+      jshq52["关联方"] = '是'
+      jshq53 = jshq49.loc[jshq49['客户'].str.contains('海壹生物')]
+      jshq53["关联方"] = '是'
+      jshq54 = jshq49.loc[jshq49['客户'].str.contains('强盛生物')]
+      jshq54["关联方"] = '是'
+      jshq55 = jshq49.loc[jshq49['客户'].str.contains('杭州金诺')]
+      jshq55["关联方"] = '是'
+
+      jshq60 = pd.concat([jshq50, jshq51, jshq52, jshq53, jshq54, jshq55], ignore_index=True)
+      # jshq601 = d2.drop(["基本单位数量"], axis=1)
+      jshq61 = pd.merge(da10, jshq60, how='outer', on=['客户', '货品ID', '三级分类', '销售成本','价额','基本单位数量']);
+      jshq61["毛利"] = jshq61["价额"] - jshq61["销售成本"]
+      jshq62 = jshq61.fillna({"关联方": "否"})
+      jshq63 = jshq62.groupby(['三级分类'])["销售成本", "价额", "毛利"].sum();
+      jshq64 = pd.merge(jshq62, df63, how='left', on=['三级分类']);  # 63是输入
+      jshq65 = jshq64.groupby(['大类'])["销售成本", "价额", "毛利"].sum();
+
+      write = pd.ExcelWriter("恒奇诊断毛利分析" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx")
+
+      jshq62.to_excel(write, sheet_name='单体明细')
+      jshq63.to_excel(write, sheet_name='三级分类')
+      jshq65.to_excel(write, sheet_name='大类')
+      write.save()
+      write.close()
+      tkinter.messagebox.showinfo("运行结果", "单体毛利分析都已生成在小程序左右！");
  except Exception as error:
       tm.showerror(title="煎饼提示前方路堵",
               message="请检查提交源文件是否正确 '" + str(error) + "'.",
                detail=traceback.format_exc())
 
-###########################
-def appendStr99():  #测试组
+def appendStr86():  #暂估核对组
  try:
-      tkinter.messagebox.showinfo("提醒", "请选择控制表源文件");
+      tkinter.messagebox.showinfo("提醒", "请选择金蝶暂估项目核算表源文件");
+
+      df150 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+
+      c_df = pd.DataFrame(df150)
+      c_df.reset_index(inplace=True)
+
+      df151 = df150.drop([0], axis=0)
+
+      df152 = df151.drop(
+         ["index", "科目代码", "科目名称", "期初余额", "Unnamed: 5", "Unnamed: 7", "本年累计", "Unnamed: 9","本期发生额"],
+         axis=1)  # 删列  , "Unnamed: 11"是贷方 ,期末余额 是借方
+      df153 = df152.rename(columns={'项目代码': '供应商编码','Unnamed: 11':'金蝶暂估贷方','期末余额':'金蝶暂估借方'});
+      # df153['供应商编码'] = df153['供应商编码'].astype("float64")  # 改列格式字符改数值     1201
+
+      # 加入英克发票未到
+      tkinter.messagebox.showinfo("提醒", "请选择英克发票未到源文件");
+      df70 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+      df71 = df70.rename(columns={'供应商ID': '英克编码'});
+
+      df72 = df71.groupby(["英克编码"], as_index=False)["未结算成本金额"].sum();
+
+      # tkinter.messagebox.showinfo("提醒", "请选择金蝶映射表源文件");
+      # 加入金蝶映射表
+
+      # df160 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+
+      df160 = pd.read_excel('http://nbhealth.eicp.net:14692/gysysb.xlsx')
+
+      df161 = df160.loc[
+         df160['英克编码'].str.contains('y')]  # 7-15模糊查询,但单元格不能为0为空  （ #print(df4[df4['客户'].isin(['宁波海尔施医学检验所有限公司'])])）
+      df161["金诺类型"] = '否'
+
+      df162 = pd.merge(df160, df161, how='left', on=['英克编码']);  # 完全相同合并，忽略没有的ID(没有how)
+      df163 = df162[df162["金诺类型"] != "否"]
+
+      df164 = df163.drop(
+         ["   _x","   _y", "供应商名称_y", "供应商编码_y","金诺类型",
+          "供应商名称_x"], axis=1)  # 删列
+      df165 = df164.rename(columns={'供应商编码_x': '供应商编码'});
+      df165['英克编码'] = df165['英克编码'].astype("float64")  # 改列格式字符改数值
+
+      ##先拼接英克
+      df166 = pd.merge(df72, df165, how='inner', on=['英克编码'])
+      # df166['供应商编码'] = df166['供应商编码'].astype("float64")  # 改列格式字符改数值 1201
+      # df167 = df166.drop_duplicates(['供应商编码'])
+      df167 = df166.groupby("供应商编码")["未结算成本金额"].sum();
 
 
-      df1 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
-      # df2 = pd.read_excel('http://nbhealth.eicp.net:14692/khysb.xlsx')
-      # df3 = pd.merge(df1, df2, how='left', on=['客户名称'])
-      df1["采购进价"].replace("inf", "0", inplace=True)
-      df1["采购进价"].replace("-inf", "0", inplace=True)
+      ###两表合并
 
+      df168 = pd.merge(df153, df167, how='outer', on=['供应商编码'])
 
+      df169 =df168[df168["供应商"] != "合计"]
 
-
-      df1.to_excel(excel_writer=tkinter.filedialog.asksaveasfilename(title="请创建或者选择一个保存数据的Excel文件",
+      df170 = df169.fillna(0)
+      df170['暂估差异'] = df170['金蝶暂估贷方'].astype("float64") - df170['金蝶暂估借方'].astype("float64") - df170['未结算成本金额'].astype("float64")
+      df170['暂估差异'].astype("float64")
+      df170.to_excel(excel_writer=tkinter.filedialog.asksaveasfilename(title="请创建或者选择一个保存数据的Excel文件",
                                                                     filetypes=[("Microsoft Excel文件", "*.xlsx"),
                                                                                (
                                                                                "Microsoft Excel 97-20003 文件", "*.xls")],
                                                                     defaultextension=".xlsx"), sheet_name="表1");
-      tkinter.messagebox.showinfo("运行结果", "导出成功！");
+      tkinter.messagebox.showinfo("运行结果", "暂估核对导出成功！");
 
  except Exception as error:
       tm.showerror(title="煎饼提示前方路堵",
               message="请检查提交源文件是否正确 '" + str(error) + "'.",
                detail=traceback.format_exc())
+
+
+
+def appendStr101():  #2020英克毛利
+ try:
+      tkinter.messagebox.showinfo("提醒", "请放入生物采购明细单");
+      df1 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+
+      # sw65 = sw64[~sw64['三级分类'].str.contains('仪器')]  # 取反
+      #
+      # df2 = df1[~df1['供应商'].str.contains('海尔施')]  # 取反
+      df2 = df1[df1['供应商'].str.contains('海尔施')==False]  # 取反
+      df3 = df2[~df2['供应商'].str.contains('恒奇诊断')]  # 取反
+
+      df4 = df1[df1["供应商"] == "宁波海尔施基因科技有限公司"]
+      df5 = pd.concat([df3,df4], ignore_index=True)
+
+      # df4 = df3[~df3['供应商'].str.contains('宁波美晶')]  # 取反
+      # df5 = df4[~df4['供应商'].str.contains('海壹生物')]  # 取反
+      # df6 = df5[~df5['供应商'].str.contains('强盛生物')]  # 取反
+      # df7 = df6[~df6['供应商'].str.contains('杭州金诺')]  # 取反
+
+      # df8 = df7.loc[df7.reset_index().groupby(['货品ID'])['成本单价'].idxmax()]      #取成本单价最高得一笔
+      # df9 = df8.dropna(how='all')  #全部缺失就删除
+
+      tkinter.messagebox.showinfo("提醒", "请放入上海采购明细单");
+      sh1 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+      sh2 = sh1[sh1['供应商'].str.contains('海尔施')==False]  # 取反
+      sh3 = sh2[~sh2['供应商'].str.contains('恒奇诊断')]  # 取反
+      sh4 = sh3[~sh3['供应商'].str.contains('宁波美晶')]  # 取反
+      sh5 = sh4[~sh4['供应商'].str.contains('海壹生物')]  # 取反
+      sh6 = sh5[~sh5['供应商'].str.contains('强盛生物')]  # 取反
+      sh7 = sh6[~sh6['供应商'].str.contains('杭州金诺')]  # 取反
+
+      # sh8 = sh7.loc[sh7.reset_index().groupby(['货品ID'])['成本单价'].idxmax()]  # 取成本单价最高得一笔
+      # sh9 = sh8.dropna(how='all')  # 全部缺失就删除
+
+      tkinter.messagebox.showinfo("提醒", "请放入恒奇诊断采购明细单");
+      hq1 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+      hq2 = hq1[hq1['供应商'].str.contains('海尔施')==False]  # 取反
+      hq3 = hq2[~hq2['供应商'].str.contains('恒奇诊断')]  # 取反
+      hq4 = hq3[~hq3['供应商'].str.contains('宁波美晶')]  # 取反
+      hq5 = hq4[~hq4['供应商'].str.contains('海壹生物')]  # 取反
+      hq6 = hq5[~hq5['供应商'].str.contains('强盛生物')]  # 取反
+      hq7 = hq6[~hq6['供应商'].str.contains('杭州金诺')]  # 取反
+
+      tkinter.messagebox.showinfo("提醒", "请放入医药采购明细单");
+      yy1 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+      yy2 = yy1[yy1['供应商'].str.contains('海尔施') == False]  # 取反
+      yy3 = yy2[~yy2['供应商'].str.contains('恒奇诊断')]  # 取反
+      yy4 = yy3[~yy3['供应商'].str.contains('宁波美晶')]  # 取反
+      yy5 = yy4[~yy4['供应商'].str.contains('海壹生物')]  # 取反
+      yy6 = yy5[~yy5['供应商'].str.contains('强盛生物')]  # 取反
+      yy7 = yy6[~yy6['供应商'].str.contains('杭州金诺')]  # 取反
+
+
+
+
+      #####入库明细拼接
+
+      df8 = pd.concat([df5, sh7, hq7,yy7], ignore_index=True)
+      df9 = df8.loc[df8.reset_index().groupby(['货品ID'])['成本单价'].idxmax()]  # 取成本单价最高得一笔
+      df10 = df9.dropna(how='all')  # 全部缺失就删除
+
+
+      #####后面自定义销售明细
+
+
+
+      tkinter.messagebox.showinfo("提醒", "请放入自定义销售发票明细");
+      df5 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+
+      df6 = df5[df5["业务部门"] != '药品一部']
+      df7 = df6[df6["业务部门"] != '药品二部']
+      df701 = df7.fillna({"客户ID": "无"})
+      df702 = df701[df701["客户ID"] != '无']
+      df703 = df702.fillna({"业务员": "无"})
+      df704 = df703.fillna({"客户所属部门": "无"})
+      df705 = df704.fillna({"三级分类": "无"})
+
+      df705['业务员'].astype("str")
+      df705['三级分类'].astype("str")
+      df705['客户ID'].astype("str")
+
+      # df8 = df705.groupby("客户","客户ID","三级分类","客户所属部门","货品ID")["基本单位数量","价额"].sum();
+
+      df8 = df7.drop(["销售发货总单业务日期", "业务日期", "结算细单ID", "委托人",
+                      "通用名","商品名","规格","货品批号","生产日期","有效期","基本单位",
+                      "生产厂家","单价","金额","收款标志","累计收款数量","累计收款金额",
+                      "未收款金额","税额","税率","总金额","发票号码","发票日期","结算传票ID",
+                      "状态","发票类型","外币","汇率","考核日期","应结金额","结算细单备注",
+                      "发货总单备注","发货细单备注","制单人","确认人","确认日期","细单条数",
+                      "作废标志","作废人","结算总单备注","客户操作码","客户编码","制单人ID",
+                      "独立单元ID","货品操作码","业务员ID","业务员操作码","业务部门ID",
+                      "结算单ID","预计开票时间", "发票要求", "销售发货细单", "销售发货总单",
+                      "保管账ID", "客户部门编号", "存货传票ID","业务部门","产地","独立单元",
+                      "未收款数量"
+                      ], axis=1)  # 删列
+
+      sw49 = df8[df8["客户"] != '宁波海尔施基因科技有限公司']
+      sw4901 = sw49.fillna({"客户": "空"})
+      sw4902 = sw4901[sw4901["客户"] != '空']
+
+
+      sw50 = sw4902.loc[sw4902['客户'].str.contains('海尔施')]
+      sw50["关联方"] = '是'
+      sw51 = sw4902.loc[sw4902['客户'].str.contains('恒奇诊断')]
+      sw51["关联方"] = '是'
+      sw52 = sw4902.loc[sw4902['客户'].str.contains('宁波美晶')]
+      sw52["关联方"] = '是'
+      sw53 = sw4902.loc[sw4902['客户'].str.contains('海壹生物')]
+      sw53["关联方"] = '是'
+      sw54 = sw4902.loc[sw4902['客户'].str.contains('强盛生物')]
+      sw54["关联方"] = '是'
+      sw55 = sw4902.loc[sw4902['客户'].str.contains('杭州金诺')]
+      sw55["关联方"] = '是'
+
+      sw60 = pd.concat([sw50, sw51, sw52, sw53, sw54, sw55], ignore_index=True)
+      # sw601 = d2.drop(["基本单位数量"], axis=1)
+      sw61 = pd.merge(sw4902, sw60, how='outer', on=['客户', '货品ID', '三级分类','价额']);
+      # sw61["毛利"] = sw61["价额"] - sw61["销售成本"]
+      sw62 = sw61.fillna({"关联方": "否"})
+
+      sw63 = sw62[sw62["关联方"] != '是']
+
+      sw63['客户ID_x'].astype(str)
+      sw63['价额'].astype("float64")
+      sw63['基本单位数量_x'].astype("float64")
+
+      sw64 = sw63.groupby(["客户","客户ID_x","业务员_x","三级分类","客户所属部门_x","货品ID"],as_index=False)["基本单位数量_x","价额"].sum();
+
+      sw65 = sw64[~sw64['三级分类'].str.contains('仪器')]  # 取反
+      sw6501 = sw65[~sw65['三级分类'].str.contains('配置')]  # 取反
+
+      # sw65 = sw64[sw64['三级分类'].str.contains('仪器') == False]  # 取反
+      # sw66 = sw65[sw65['三级分类'].str.contains('配置') == False]  # 取反
+
+      sw67 = df10.groupby(["货品ID"],as_index=False)["成本单价"].sum();
+
+      sw68 = sw6501.rename(columns={'客户ID_x': '客户ID','业务员_x':'业务员','客户所属部门_x':'客户所属部门','基本单位数量_x':'基本单位数量'});
+
+      sw69 = pd.merge(sw68, sw67, on=['货品ID'],how='left')
+      sw70 = sw69.fillna({"成本单价": 0})
+
+      sw70["采购成本"] = (sw70["基本单位数量"].astype("float64") * sw70["成本单价"].astype("float64")) #- sw69["价额"].astype("float64")
+      sw71 = sw70.groupby(["客户","客户ID","业务员","客户所属部门"],as_index=False)["价额","采购成本"].sum();
+
+
+
+
+
+      # ~取反
+      # sw66 = sw65[~sw65['三级分类'].str.contains('仪器', na=False)]
+      # sw66 = sw65.rename(columns={'三级分类': 'title'})  # 改名
+      # sw66 = sw65.loc[~sw4902['三级分类'].str.contains('仪器')]#过期用法
+
+      write = pd.ExcelWriter("本年销售毛利分析" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx")
+
+      sw67.to_excel(write, sheet_name='货品采购成本明细')
+      sw68.to_excel(write, sheet_name='货品销售明细')
+      sw71.to_excel(write, sheet_name='按客户销售成本明细')
+
+      write.save()
+      write.close()
+      tkinter.messagebox.showinfo("运行结果", "销售分析都已生成！");
+
+
+
+
+
+
+ except Exception as error:
+      tm.showerror(title="煎饼提示前方路堵",
+              message="请检查提交源文件是否正确 '" + str(error) + "'.",
+               detail=traceback.format_exc())
+
+
+
+############################
+def appendStr100():  #测试组
+ try:
+      tkinter.messagebox.showinfo("提醒当前版本2.5", "下载地址：待定");
+      tkinter.messagebox.showinfo("提醒", "请选择生物源文件");
+      df1 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+
+      df2 = df1.groupby(['客户', '货品ID', '三级分类'])["销售成本", "基本单位数量", "价额"].sum();
+      df2.reset_index(inplace=True)  # 取消合并
+
+      d2 = df1.groupby(['客户', '货品ID', '三级分类'])["销售成本", "基本单位数量", "价额"].sum();
+      d2.reset_index(inplace=True)  # 取消合并
+      tkinter.messagebox.showinfo("提醒", "请选择分类规则源文件");
+      df63 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+
+      sw49 = d2[d2["客户"] != '宁波海尔施基因科技有限公司']
+      sw50 = sw49.loc[sw49['客户'].str.contains('海尔施')]
+      sw50["关联方"] = '是'
+      sw51 = sw49.loc[sw49['客户'].str.contains('恒奇诊断')]
+      sw51["关联方"] = '是'
+      sw52 = sw49.loc[sw49['客户'].str.contains('宁波美晶')]
+      sw52["关联方"] = '是'
+      sw53 = sw49.loc[sw49['客户'].str.contains('海壹生物')]
+      sw53["关联方"] = '是'
+      sw54 = sw49.loc[sw49['客户'].str.contains('强盛生物')]
+      sw54["关联方"] = '是'
+      sw55 = sw49.loc[sw49['客户'].str.contains('杭州金诺')]
+      sw55["关联方"] = '是'
+
+      sw60 = pd.concat([sw50, sw51, sw52, sw53, sw54, sw55], ignore_index=True)
+      # sw601 = d2.drop(["基本单位数量"], axis=1)
+      sw61 = pd.merge(d2, sw60, how='outer', on=['客户', '货品ID', '三级分类', '销售成本', '价额', '基本单位数量']);
+      sw61["毛利"] = sw61["价额"] - sw61["销售成本"]
+      sw62 = sw61.fillna({"关联方": "否"})
+      sw63 = sw62.groupby(['三级分类'])["销售成本", "价额", "毛利"].sum();
+      sw64 = pd.merge(sw62, df63, how='left', on=['三级分类']);  # 63是输入
+      sw65 = sw64.groupby(['大类'])["销售成本", "价额", "毛利"].sum();
+
+      write = pd.ExcelWriter("毛利分析1" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx")
+
+      sw62.to_excel(write, sheet_name='单体明细')
+      sw63.to_excel(write, sheet_name='三级分类')
+      sw65.to_excel(write, sheet_name='大类')
+      write.save()
+      write.close()
+
+      #################################################################11-17
+      # df1 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+      #
+      # df2 = df1.loc[df1.reset_index().groupby(['货品ID'])['成本单价'].idxmax()]      #取成本单价最高得一笔
+      # df3 = df2.dropna(how='all')  #全部缺失就删除
+      #
+      # tkinter.messagebox.showinfo("提醒", "请放入自定义销售发票明细");
+      # df5 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+      #
+      # df6 = df5[df5["业务部门"] != '药品一部']
+      # df7 = df6[df6["业务部门"] != '药品二部']
+      # df701 = df7.fillna({"客户ID": "无"})
+      # df702 = df701[df701["客户ID"] != '无']
+      # df703 = df702.fillna({"业务员": "无"})
+      # df704 = df703.fillna({"客户所属部门": "无"})
+      # df705 = df704.fillna({"三级分类": "无"})
+      #
+      # df705['业务员'].astype("str")
+      # df705['三级分类'].astype("str")
+      # df705['客户ID'].astype("str")
+      #
+      #
+      # df8 = df7.drop(["销售发货总单业务日期", "业务日期", "结算细单ID", "委托人",
+      #                 "通用名","商品名","规格","货品批号","生产日期","有效期","基本单位",
+      #                 "生产厂家","单价","金额","收款标志","累计收款数量","累计收款金额",
+      #                 "未收款金额","税额","税率","总金额","发票号码","发票日期","结算传票ID",
+      #                 "状态","发票类型","外币","汇率","考核日期","应结金额","结算细单备注",
+      #                 "发货总单备注","发货细单备注","制单人","确认人","确认日期","细单条数",
+      #                 "作废标志","作废人","结算总单备注","客户操作码","客户编码","制单人ID",
+      #                 "独立单元ID","货品操作码","业务员ID","业务员操作码","业务部门ID",
+      #                 "结算单ID","预计开票时间", "发票要求", "销售发货细单", "销售发货总单",
+      #                 "保管账ID", "客户部门编号", "存货传票ID","业务部门","产地","独立单元",
+      #                 "未收款数量"
+      #                 ], axis=1)  # 删列
+      #
+      # sw49 = df8[df8["客户"] != '宁波海尔施基因科技有限公司']
+      # sw4901 = sw49.fillna({"客户": "空"})
+      # sw4902 = sw4901[sw4901["客户"] != '空']
+      #
+      #
+      # sw50 = sw4902.loc[sw4902['客户'].str.contains('海尔施')]
+      # sw50["关联方"] = '是'
+      # sw51 = sw4902.loc[sw4902['客户'].str.contains('恒奇诊断')]
+      # sw51["关联方"] = '是'
+      # sw52 = sw4902.loc[sw4902['客户'].str.contains('宁波美晶')]
+      # sw52["关联方"] = '是'
+      # sw53 = sw4902.loc[sw4902['客户'].str.contains('海壹生物')]
+      # sw53["关联方"] = '是'
+      # sw54 = sw4902.loc[sw4902['客户'].str.contains('强盛生物')]
+      # sw54["关联方"] = '是'
+      # sw55 = sw4902.loc[sw4902['客户'].str.contains('杭州金诺')]
+      # sw55["关联方"] = '是'
+      #
+      # sw60 = pd.concat([sw50, sw51, sw52, sw53, sw54, sw55], ignore_index=True)
+      #
+      # sw61 = pd.merge(sw4902, sw60, how='outer', on=['客户', '货品ID', '三级分类','价额']);
+      #
+      # sw62 = sw61.fillna({"关联方": "否"})
+      #
+      # sw63 = sw62[sw62["关联方"] != '是']
+      #
+      # sw63['客户ID_x'].astype(str)
+      # sw63['价额'].astype("float64")
+      # sw63['基本单位数量_x'].astype("float64")
+      #
+      # sw64 = sw63.groupby(["客户","客户ID_x","业务员_x","三级分类","客户所属部门_x","货品ID"],as_index=False)["基本单位数量_x","价额"].sum();
+      #
+      # sw65 = sw64[~sw64['三级分类'].str.contains('仪器')]  # 取反
+      #
+      #
+      #
+      # sw67 = df3.groupby(["货品ID"],as_index=False)["成本单价"].sum();
+      #
+      # sw68 = sw65.rename(columns={'客户ID_x': '客户ID','业务员_x':'业务员','客户所属部门_x':'客户所属部门','基本单位数量_x':'基本单位数量'});
+      #
+      # sw69 = pd.merge(sw68, sw67, on=['货品ID'])
+      # sw69["毛利"] = (sw69["基本单位数量"].astype("float64") * sw69["成本单价"].astype("float64")) - sw69["价额"].astype("float64")
+      #
+      # sw70 = sw69.groupby(["客户","客户ID","业务员","客户所属部门"],as_index=False)["价额","基本单位数量","成本单价"].sum();
+      #
+      #
+      #
+      # write = pd.ExcelWriter("本年销售毛利分析" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx")
+      #
+      # sw67.to_excel(write, sheet_name='采购成本明细')
+      #
+      # sw70.to_excel(write, sheet_name='按客户销售毛利明细')
+      #
+      # write.save()
+      # write.close()
+      # tkinter.messagebox.showinfo("运行结果", "单体毛利分析都已生成！");
+
+     ###################################################
+
+
+
+      # df3.to_excel(excel_writer=tkinter.filedialog.asksaveasfilename(title="请创建或者选择一个保存数据的Excel文件",
+      #                                                                  filetypes=[("Microsoft Excel文件", "*.xlsx"),
+      #                                                                             (
+      #                                                                                "Microsoft Excel 97-20003 文件",
+      #                                                                                "*.xls")],
+      #                                                                  defaultextension=".xlsx"), sheet_name="表1");
+      # tkinter.messagebox.showinfo("运行结果", "采购数据导出成功！");
+      #
+      # sw69.to_excel(excel_writer=tkinter.filedialog.asksaveasfilename(title="请创建或者选择一个保存数据的Excel文件",
+      #                                                                filetypes=[("Microsoft Excel文件", "*.xlsx"),
+      #                                                                           (
+      #                                                                              "Microsoft Excel 97-20003 文件",
+      #                                                                              "*.xls")],
+      #                                                                defaultextension=".xlsx"), sheet_name="表1");
+      # tkinter.messagebox.showinfo("运行结果", "销售明细处理导出成功！");
+
+
+
+      # sw62 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+      # df63 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+      # sw63 = sw62.groupby(['三级分类'])["销售成本", "价额", "毛利"].sum();
+      #
+      #
+      #
+      # sw64 = pd.merge(sw62, df63, how='left', on=['三级分类']);  # 63是输入
+      # sw65 = sw64.groupby(['大类'])["销售成本", "价额", "毛利"].sum();
+      #
+      #
+      #
+      # write = pd.ExcelWriter("生物毛利分析" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx")
+      #
+      # sw63.to_excel(write, sheet_name='三级分类')
+      # sw65.to_excel(write, sheet_name='大类')
+      # write.save()
+      # write.close()
+      # tkinter.messagebox.showinfo("运行结果", "完成！");
+
+ except Exception as error:
+      tm.showerror(title="煎饼提示前方路堵",
+              message="请检查提交源文件是否正确 '" + str(error) + "'.",
+               detail=traceback.format_exc())
+
+##############
+############################
+# def appendStr99():  #测试组
+#  try:
+#     os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.UTF8'
+#
+#     # 查询操作（查）
+#
+#     db = oracle.connect('heseas/kingdee@60.12.218.220:6694/ORCLEAS')  # 数据库连接
+#     cursor = db.cursor()  # 创建cursor
+#     cursor.execute("SELECT * FROM t_gl_acctcussent")  # 执行sql语句
+#     rs = cursor.fetchall()  # 一次返回所有结果集 fetchall
+#     id2 = rs[0][0]  # 去除多余的内容
+#     print(id2)  # 打印内容
+#
+#     db.close()  # 关闭数据库连接
+#
+#     tkinter.messagebox.showinfo(id2, "下载地址：待定");
+#
+#
+#  except Exception as error:
+#       tm.showerror(title="煎饼提示前方路堵",
+#               message="请检查提交源文件是否正确 '" + str(error) + "'.",
+#                detail=traceback.format_exc())
 
 ##############
 filemenu=Menu(menubar,tearoff=False)
@@ -7273,7 +7900,7 @@ file3menu.add_command(label="对账单按客户整理",command=appendStr16)
 file3menu.add_command(label="非公控制整理表",command=appendStr19)
 file3menu.add_command(label="非公控制整理表-带英克ID",command=appendStr84)
 file3menu.add_command(label="销售英克-金蝶核对",command=appendStr83)
-
+file3menu.add_command(label="暂估英克-金蝶核对",command=appendStr86)
 
 menubar.add_cascade(label='金蝶功能',menu=file3menu)
 
@@ -7295,6 +7922,7 @@ menubar.add_cascade(label='认证功能',menu=file4menu)
 
 file6menu=Menu(menubar,tearoff=False)
 file6menu.add_command(label="2020考核表",command=appendStr32)
+file6menu.add_command(label="2020英克毛利计算",command=appendStr101)
 # file6menu.add_command(label="历史销售总单",command=appendStr4)
 # file6menu.add_command(label="英克销售与开票对比",command=appendStr21)
 # file6menu.add_command(label="英克出库汇总",command=appendStr22)
@@ -7312,7 +7940,7 @@ file7menu.add_command(label="往来抵消行列转换",command=appendStr82)
 file7menu.add_command(label="DHY-K3转换",command=appendStr43)
 file7menu.add_command(label="QS-K3转换",command=appendStr44)
 file7menu.add_command(label="JCK-K3转换",command=appendStr45)
-file7menu.add_command(label="非关联交易毛利计算",command=appendStr85)
+file7menu.add_command(label="非关联交易毛利计算-包含单体",command=appendStr85)
 
 menubar.add_cascade(label='报表数据',menu=file7menu)
 
@@ -7321,7 +7949,8 @@ menubar.add_cascade(label='报表数据',menu=file7menu)
 file5menu=Menu(menubar,tearoff=False)
 file5menu.add_command(label="网页验真独包如需要请联系煎饼")
 file5menu.add_command(label="图片识别独包如需要请联系煎饼")
-file5menu.add_command(label="测试功能",command=appendStr99)
+
+# file5menu.add_command(label="测试功能",command=appendStr99)
 
 menubar.add_cascade(label='识别验真',menu=file5menu)
 
@@ -7329,6 +7958,7 @@ file8menu=Menu(menubar,tearoff=False)
 file8menu.add_command(label="2.0新界面")
 file8menu.add_command(label="遇到错误请拍砖")
 file8menu.add_command(label="新需求请联系煎饼")
+file8menu.add_command(label="下载新版",command=appendStr100)
 menubar.add_cascade(label='版本介绍',menu=file8menu)
 
 root.config(menu=menubar)
@@ -7354,8 +7984,9 @@ mainloop()
 #
 #
 # # 查询操作（查）
-
-
+#
+#
+#
 # db=oracle.connect('heseas/kingdee@60.12.218.220:6694/orcleas')#数据库连接
 # cursor=db.cursor()#创建cursor
 # cursor.execute("SELECT * FROM t_gl_acctcussent")#执行sql语句
@@ -7364,3 +7995,621 @@ mainloop()
 # print(id2)#打印内容
 #
 # db.close()#关闭数据库连接
+#
+
+df156 = pd.merge(df124, df155, how='left', on=['客户名称']);  # 完全相同合并，忽略没有的客户(没有how)
+
+    #####自动生成完全版数据
+
+    #df157 = pd.merge(df123, df155, how='left', on=['客户名称']);
+
+    #df151 = df150['项目代码'].str.split('-| ', expand=True);
+
+    #df152 = pd.merge(df151, df23, right_index=True, left_index=True);
+
+    df261 = df25[df25["公司"] != "海尔施集团"]
+    df262 = df261[df261["项目"] == "001 代理试剂"]
+
+    ####19-10-25整理输出表格格式
+
+    #df157 = df156.drop(["Unnamed: 6_x", "等级_y", "Unnamed: 6_y"], axis=1)
+
+    #df158 = df157.rename(columns={'等级_x': '等级'});
+
+
+
+    df156.to_excel(excel_writer=tkinter.filedialog.asksaveasfilename(title="请创建或者选择一个保存数据的Excel文件",
+                                                                    filetypes=[("Microsoft Excel文件", "*.xlsx"),
+                                                                               ("Microsoft Excel 97-20003 文件",
+                                                                                   "*.xls")],
+                                                                    defaultextension=".xlsx"));
+
+   # df262.to_excel("客户等级全部公司版" + str(datetime.datetime.now().strftime('%Y%m%d%h')) + ".xls", sheet_name="sheet1",index=False)  # 自动输出
+    tkinter.messagebox.showinfo("运行结果", "客户等级测试导出成功！");
+
+ except Exception as error:
+     tm.showerror(title="煎饼提示前方路堵",
+             message="请检查提交源文件是否正确 '" + str(error) + "'.",
+             detail=traceback.format_exc())
+
+
+
+
+def appendStr20():  ##########################################################################################销售发票分税率巧儿
+
+ try:
+    tkinter.messagebox.showinfo("提醒", "请先选择开票明细源文件");
+    df = pd.read_excel(tkinter.filedialog.askopenfilename());
+
+    df1 = df.drop(df.columns[[[[[[[[[[3, 4, 5, 7, 8, 10, 11, 12, 13, 17]]]]]]]]]], axis=1);
+    df2 = df1.drop(df1.index[[[[0, 1, 2, 3]]]], axis=0);
+    df3 = df2[df2["Unnamed: 9"] != "小计"];
+    df4 = df3[df3["Unnamed: 9"] != "商品名称"];
+    df5 = df4.dropna(how="all");
+    df6 = df5.fillna(method='pad');
+    df6["Unnamed: 14"] = df6["Unnamed: 14"].astype("float64");  # 改变格式
+    df6["Unnamed: 16"] = df6["Unnamed: 16"].astype("float64");
+
+    df9 = df6.loc[df6['Unnamed: 9'].str.contains('紫杉醇注射液')]  # 7-15模糊查询,但单元格不能为0为空  （ #print(df4[df4['客户'].isin(['宁波海尔施医学检验所有限公司'])])）
+    df10 = df6.loc[df6['Unnamed: 9'].str.contains('阿那曲唑片')]
+    df11 = df6.loc[df6['Unnamed: 9'].str.contains('奥沙利铂甘露醇注射液')]
+    df12 = df6.loc[df6['Unnamed: 9'].str.contains('比卡鲁胺片')]
+    df13 = df6.loc[df6['Unnamed: 9'].str.contains('醋酸奥曲肽注射液')]
+    df14 = df6.loc[df6['Unnamed: 9'].str.contains('醋酸戈舍瑞林缓释植入剂')]
+    df15 = df6.loc[df6['Unnamed: 9'].str.contains('多西他赛注射液')]
+    df16 = df6.loc[df6['Unnamed: 9'].str.contains('吉非替尼片')]
+    df17 = df6.loc[df6['Unnamed: 9'].str.contains('甲苯磺酸索拉非尼片')]
+    df18 = df6.loc[df6['Unnamed: 9'].str.contains('甲磺酸奥希替尼片')]
+    df19 = df6.loc[df6['Unnamed: 9'].str.contains('甲磺酸伊马替尼片')]
+    df20 = df6.loc[df6['Unnamed: 9'].str.contains('酒石酸长春瑞滨注射液')]
+    df21 = df6.loc[df6['Unnamed: 9'].str.contains('卡培他滨片')]
+    df22 = df6.loc[df6['Unnamed: 9'].str.contains('来曲唑片')]
+    df23 = df6.loc[df6['Unnamed: 9'].str.contains('硫培非格司亭注射液')]
+    df24 = df6.loc[df6['Unnamed: 9'].str.contains('顺铂注射液')]
+    df25 = df6.loc[df6['Unnamed: 9'].str.contains('替吉奥胶囊')]
+    df26 = df6.loc[df6['Unnamed: 9'].str.contains('注射用奥沙利铂')]
+    df27 = df6.loc[df6['Unnamed: 9'].str.contains('注射用地西他滨')]
+    df28 = df6.loc[df6['Unnamed: 9'].str.contains('注射用洛铂')]
+    df29 = df6.loc[df6['Unnamed: 9'].str.contains('注射用奈达铂')]
+    df30 = df6.loc[df6['Unnamed: 9'].str.contains('注射用培美曲塞二钠')]
+    df31 = df6.loc[df6['Unnamed: 9'].str.contains('注射用亚叶酸钙')]
+    df32 = df6.loc[df6['Unnamed: 9'].str.contains('注射用盐酸表柔比星')]
+    df33 = df6.loc[df6['Unnamed: 9'].str.contains('注射用盐酸吉西他滨')]
+    df34 = df6.loc[df6['Unnamed: 9'].str.contains('注射用盐酸伊立替康')]
+    df35 = df6.loc[df6['Unnamed: 9'].str.contains('注射用紫杉醇')]
+    df36 = df6.loc[df6['Unnamed: 9'].str.contains('比卡鲁胺胶囊')]
+
+    df40 = pd.concat([df9, df10, df11, df12, df13, df14, df15, df16, df17, df18, df19, df20, df21, df22,df23,
+                      df24,df25,df26,df27,df28,df29,df30,df31,df32,df33,df34,df35,df36],
+                      ignore_index=True)  # 组合
+    df41 = df40.sort_values(by=['Unnamed: 1'], axis=0, ascending=True)  # 行排序
+
+    df42 = df41.rename(columns={'Unnamed: 1': '发票号码', 'Unnamed: 2': '客户', 'Unnamed: 6': '发票日期', 'Unnamed: 9': '货品名称',
+                         'Unnamed: 14': '无税金额', 'Unnamed: 15': '税率','Unnamed: 16': '税额'});
+
+
+    df42["分类"]=df42["税率"]
+    df42["分类"].replace("3%", "抗癌3%", inplace=True)
+
+
+
+
+    #######上面是抗癌药物3%
+    #####下面开始药品3%
+    df49 = df6[df6["Unnamed: 15"] == "3%"];
+
+    df50 = df49.loc[df49['Unnamed: 9'].str.contains('重组人干扰素a2b注射液')]  # 7-15模糊查询,但单元格不能为0为空
+    df51 = df49.loc[df49['Unnamed: 9'].str.contains('注射用鼠神经生长因子')]  # 7-15模糊查询,但单元格不能为0为空
+    df52 = df49.loc[df49['Unnamed: 9'].str.contains('脑苷肌肽注射液')]  # 7-15模糊查询,但单元格不能为0为空
+    df53 = df49.loc[df49['Unnamed: 9'].str.contains('骨瓜提取物注射液')]  # 7-15模糊查询,但单元格不能为0为空
+    df54 = df49.loc[df49['Unnamed: 9'].str.contains('注射用骨肽')]  # 7-15模糊查询,但单元格不能为0为空
+    df55 = df49.loc[df49['Unnamed: 9'].str.contains('静注人免疫球蛋白')]  # 7-15模糊查询,但单元格不能为0为空
+    df56 = df49.loc[df49['Unnamed: 9'].str.contains('人血白蛋白')]  # 7-15模糊查询,但单元格不能为0为空
+    df57 = df49.loc[df49['Unnamed: 9'].str.contains('人凝血酶原复合物')]  # 7-15模糊查询,但单元格不能为0为空
+    df58 = df49.loc[df49['Unnamed: 9'].str.contains('破伤风人免疫球蛋白')]  # 7-15模糊查询,但单元格不能为0为空
+    df59 = df49.loc[df49['Unnamed: 9'].str.contains('缩宫素注射液')]  # 7-15模糊查询,但单元格不能为0为空
+    df60 = df49.loc[df49['Unnamed: 9'].str.contains('注射用硼替佐米')]  # 7-15模糊查询,但单元格不能为0为空
+    df61 = df49.loc[df49['Unnamed: 9'].str.contains('注射用白眉蛇毒血凝酶')]  # 7-15模糊查询,但单元格不能为0为空
+    df62 = df49.loc[df49['Unnamed: 9'].str.contains('酪酸梭菌活菌胶囊')]  # 7-15模糊查询,但单元格不能为0为空
+
+    df63 = pd.concat([df50,df51,df52,df53,df54,df55,df56,df57,df58,df59,df60,df61,df62],ignore_index=True)  # 组合
+    print(df63)
+
+    df64 = df63.sort_values(by=['Unnamed: 1'], axis=0, ascending=True)  # 行排序
+
+    df65 = df64.rename(columns={'Unnamed: 1': '发票号码', 'Unnamed: 2': '客户', 'Unnamed: 6': '发票日期', 'Unnamed: 9': '货品名称',
+                                'Unnamed: 14': '无税金额', 'Unnamed: 15': '税率', 'Unnamed: 16': '税额'});
+
+    df65["分类"] = df65["税率"]
+    df65["分类"].replace("3%", "药品3%", inplace=True)
+
+
+
+    #####药品3%结束
+    #####试剂3%开始
+    df66 = df6[df6["Unnamed: 15"] == "3%"];
+
+    df67 = df66.loc[df66['Unnamed: 9'].str.contains('A抗A抗B血型定型试剂')]  # 7-15模糊查询,但单元格不能为0为空
+    df68 = df66.loc[df66['Unnamed: 9'].str.contains('B抗A抗B血型定型试剂')]  # 7-15模糊查询,但单元格不能为0为空
+    df69 = df66.loc[df66['Unnamed: 9'].str.contains('抗A,抗B血型定型试剂')]  # 7-15模糊查询,但单元格不能为0为空
+    df70 = df66.loc[df66['Unnamed: 9'].str.contains('0605005人类免疫缺陷病毒抗体诊断试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df71 = df66.loc[df66['Unnamed: 9'].str.contains('0605007乙型肝炎病毒表面抗原诊断试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df72 = df66.loc[df66['Unnamed: 9'].str.contains('A 抗A抗B血型定型试剂')]  # 7-15模糊查询,但单元格不能为0为空
+    df73 = df66.loc[df66['Unnamed: 9'].str.contains('B 抗A抗B血型定型试剂')]  # 7-15模糊查询,但单元格不能为0为空
+    df74 = df66.loc[df66['Unnamed: 9'].str.contains('抗人球蛋白检测卡')]  # 7-15模糊查询,但单元格不能为0为空
+    df75 = df66.loc[df66['Unnamed: 9'].str.contains('梅毒螺旋体抗体诊断试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df76 = df66.loc[df66['Unnamed: 9'].str.contains('19211人类免疫缺陷病毒抗体诊断试剂')]  # 7-15模糊查询,但单元格不能为0为空
+    df77 = df66.loc[df66['Unnamed: 9'].str.contains('乙型肝炎病毒核心抗体IgM检测试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df78 = df66.loc[df66['Unnamed: 9'].str.contains('乙型肝炎病毒前S1抗原检测试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df79 = df66.loc[df66['Unnamed: 9'].str.contains('丙型肝炎病毒抗体诊断试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df80 = df66.loc[df66['Unnamed: 9'].str.contains('梅毒甲苯胺红不加热血清试验诊断试剂')]  # 7-15模糊查询,但单元格不能为0为空
+    df81 = df66.loc[df66['Unnamed: 9'].str.contains('ABO血型反定型试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df82 = df66.loc[df66['Unnamed: 9'].str.contains('ABO、RhD血型定型检测卡')]  # 7-15模糊查询,但单元格不能为0为空
+    df83 = df66.loc[df66['Unnamed: 9'].str.contains('甲型肝炎病毒IgM抗体检测试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df84 = df66.loc[df66['Unnamed: 9'].str.contains('A乙型肝炎病毒表面抗体检测试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df85 = df66.loc[df66['Unnamed: 9'].str.contains('01200205A乙型肝炎病毒e抗原检测试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df86 = df66.loc[df66['Unnamed: 9'].str.contains('01200208A乙型肝炎病毒核心抗体检测试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+    df87 = df66.loc[df66['Unnamed: 9'].str.contains('01200210A乙型肝炎病毒e抗体检测试剂盒')]  # 7-15模糊查询,但单元格不能为0为空
+
+    df95 = pd.concat([df67,df68,df69,df70,df71,df72,df73,df74,df75,df76,df77,df78,df79,df80,df81,df82,df83,df84,df85,df86,df87],
+                     ignore_index=True)  # 组合
+    print(df95)
+
+    df96 = df95.sort_values(by=['Unnamed: 1'], axis=0, ascending=True)  # 行排序
+
+    df97 = df96.rename(columns={'Unnamed: 1': '发票号码', 'Unnamed: 2': '客户', 'Unnamed: 6': '发票日期', 'Unnamed: 9': '货品名称',
+                                'Unnamed: 14': '无税金额', 'Unnamed: 15': '税率', 'Unnamed: 16': '税额'});
+
+    df97["分类"] = df97["税率"]
+    df97["分类"].replace("3%", "试剂3%", inplace=True)
+
+   ####试剂3%完毕
+   ####其他3%
+
+    df110 = df6[df6["Unnamed: 15"] == "3%"];
+
+    A=df110['Unnamed: 9'].str.contains('A抗A抗B血型定型试剂')
+
+    print(A)
+    df111 = df110[df110["Unnamed: 9"] != A]
+
+
+
+
+    df112= df111.sort_values(by=['Unnamed: 1'], axis=0, ascending=True)  # 行排序
+
+    df113 = df112.rename(columns={'Unnamed: 1': '发票号码', 'Unnamed: 2': '客户', 'Unnamed: 6': '发票日期', 'Unnamed: 9': '货品名称',
+                                'Unnamed: 14': '无税金额', 'Unnamed: 15': '税率', 'Unnamed: 16': '税额'});
+
+    df100 =pd.concat([df42,df65,df97,df113],
+                     ignore_index=True)  # 组合
+
+    df7a= df6.rename(columns={'Unnamed: 1': '发票号码', 'Unnamed: 2': '客户', 'Unnamed: 6': '发票日期', 'Unnamed: 9': '货品名称',
+                                'Unnamed: 14': '无税金额', 'Unnamed: 15': '税率', 'Unnamed: 16': '税额'});
+    df102 = pd.concat([df100,df7a],ignore_index=True)  # 组合
+    # 查看是否有重复行
+    re_row = df100.duplicated()
+    print(re_row)
+
+    # 查看去除重复行的数据
+    no_re_row = df100.drop_duplicates()
+    print(no_re_row)
+
+    # 查看基于[物品]列去除重复行的数据f
+    df101 = df102.drop_duplicates(['货品名称','无税金额','客户','发票号码'])
+    #print(wp)
+    df101["金额"]=df101["无税金额"]+df101["税额"]
+    df101.to_excel(excel_writer=tkinter.filedialog.asksaveasfilename(title="请创建或者选择一个保存数据的Excel文件",
+                                                                    filetypes=[("Microsoft Excel文件", "*.xlsx"),
+                                                                               (
+                                                                                   "Microsoft Excel 97-20003 文件",
+                                                                                   "*.xls")],
+                                                                    defaultextension=".xlsx"));
+
+
+    #df101.to_excel(excel_writer="d:/英克测试.xlsx",
+     #             sheet_name="测试1",
+      #            );
+    tkinter.messagebox.showinfo("运行结果", "开票税率分类导出成功！");
+ except Exception as error:
+     tm.showerror(title="煎饼提示前方路堵",
+             message="请检查提交源文件是否正确 '" + str(error) + "'.",
+             detail=traceback.format_exc())
+
+
+
+
+
+def appendStr21():  #######英克销售和开票对比
+
+ try:
+    tkinter.messagebox.showinfo("提醒", "请先选择出库明细源文件");
+    df1 = pd.read_excel(tkinter.filedialog.askopenfilename());
+    df2=df1.fillna(0)
+    df3 = df2.drop(df2.index[[0, 1]], axis=0);
+
+    df3["仪器出库合计"]=df3["03原厂仪器"]+df3["04采购平台仪器"]+df3["0501国产辅助配置"]+df3["0502流水线辅助配置"]
+
+    df3["非仪器出库合计"]=df3["010101免疫（代理）"]+df3["010102特定蛋白（代理）"]+df3["010103血球（代理）"]+df3["010104普通生化（代理）"]\
+    +df3["010105AU生化（代理）"]+df3["010106利德曼生化（代理）"]+df3["010107尿液（代理）"]+df3["010109微生物（代理）"]+df3["010110索灵（代理BC）"]\
+    +df3["010111免疫（AMH）"]+df3["010201血凝（代理）"]+df3["0103lmmucor"]+df3["0104索灵"]+df3["010501质控试剂（代理）"]+df3["010502伯乐其它试剂"]\
+    +df3["010601BNP试剂（代理）"]+df3["010701血气（代理）"]+df3["0108苏医（代理BC血球质控）"]+df3["020101干式生化"]+df3["020102普通生化"]\
+    +df3["020103血气"]+df3["020104特殊生化"]+df3["020201血球"]+df3["020202血凝"]+df3["020203尿液"]+df3["020204血库"]+df3["020206体液"]\
+    +df3["020301发光"] +df3["020302特定蛋白"]+df3["020303酶免类"]+df3["020304其它免疫"]+df3["020305厦门万泰"]+df3["0204微生物"]+df3["0205药字号"]\
+    +df3["0206分子诊断"]+df3["0207病理科"]+df3["0208采购平台其它"]+df3["0209质控"]+df3["06软件"]+df3["07配件"] \
+    +df3["08其它业务"]+df3["0901基因试剂（自产）"]+df3["0902基因试剂（其它厂家）"]+df3["1101强盛生化"]+df3["1201沃文特免疫"]+df3["1202沃文特其他"]\
+    +df3["99其它"]
+
+    df4 = df3.drop(["Unnamed: 1", "Unnamed: 2", "Unnamed: 3"], axis=1)  # 删列
+
+    df5 = df4.groupby(["Unnamed: 0"], as_index=False)["非仪器出库合计", "仪器出库合计"].sum();
+
+    #df5["Unnamed: 0"]=df5[""]
+    df5["地区"] = df5["Unnamed: 0"]
+    df5["负责人"] = df5["Unnamed: 0"]
+    df5["地区编码"] = df5["Unnamed: 0"]
+    df5["部门"] = df5["Unnamed: 0"]
+
+
+    df5["地区"].replace("温州葛瑞", "温州1", inplace=True)
+    df5["地区编码"].replace("温州葛瑞", "0101", inplace=True)
+    df5["负责人"].replace("温州葛瑞", "葛瑞", inplace=True)
+    df5["部门"].replace("温州葛瑞", "01部", inplace=True)
+
+    df5["地区"].replace("台州唐惠", "台州1", inplace=True)
+    df5["地区编码"].replace("台州唐惠", "0103", inplace=True)
+    df5["负责人"].replace("台州唐惠", "唐惠", inplace=True)
+    df5["部门"].replace("台州唐惠", "01部", inplace=True)
+
+    df5["地区"].replace("温州潘磊", "温州2", inplace=True)
+    df5["地区编码"].replace("温州潘磊", "0102", inplace=True)
+    df5["负责人"].replace("温州潘磊", "潘磊", inplace=True)
+    df5["部门"].replace("温州潘磊", "01部", inplace=True)
+
+    df5["地区"].replace("台州胡文魁", "台州2", inplace=True)
+    df5["地区编码"].replace("台州胡文魁", "0104", inplace=True)
+    df5["负责人"].replace("台州胡文魁", "胡文魁", inplace=True)
+    df5["部门"].replace("台州胡文魁", "01部", inplace=True)
+
+    df5["地区"].replace("丽水", "丽水", inplace=True)
+    df5["地区编码"].replace("丽水", "0105", inplace=True)
+    df5["负责人"].replace("丽水", "方汝泼", inplace=True)
+    df5["部门"].replace("丽水", "01部", inplace=True)
+
+
+   #####一部完毕
+    df5["地区"].replace("宁波市区", "宁波", inplace=True)
+    df5["地区编码"].replace("宁波市区", "0201", inplace=True)
+    df5["负责人"].replace("宁波市区", "丁玲", inplace=True)
+    df5["部门"].replace("宁波市区", "02部", inplace=True)
+
+    df5["地区"].replace("舟山北仑", "舟山北仑", inplace=True)
+    df5["地区编码"].replace("舟山北仑", "0202", inplace=True)
+    df5["负责人"].replace("舟山北仑", "高大勇", inplace=True)
+    df5["部门"].replace("舟山北仑", "02部", inplace=True)
+
+    df5["地区"].replace("慈溪余姚镇海", "北三县", inplace=True)
+    df5["地区编码"].replace("慈溪余姚镇海", "0203", inplace=True)
+    df5["负责人"].replace("慈溪余姚镇海", "陆金耀", inplace=True)
+    df5["部门"].replace("慈溪余姚镇海", "02部", inplace=True)
+
+    df5["地区"].replace("奉化宁海象山", "南三县", inplace=True)
+    df5["地区编码"].replace("奉化宁海象山", "0204", inplace=True)
+    df5["负责人"].replace("奉化宁海象山", "吴燕江", inplace=True)
+    df5["部门"].replace("奉化宁海象山", "02部", inplace=True)
+   ####三部####
+
+    df5["地区"].replace("杭州姜立民", "省级", inplace=True)
+    df5["地区编码"].replace("杭州姜立民", "0301", inplace=True)
+    df5["负责人"].replace("杭州姜立民", "姜立民", inplace=True)
+    df5["部门"].replace("杭州姜立民", "03部", inplace=True)
+
+    df5["地区"].replace("杭州石亚国", "省级", inplace=True)
+    df5["地区编码"].replace("杭州石亚国", "0301", inplace=True)
+    df5["负责人"].replace("杭州石亚国", "姜立民", inplace=True)
+    df5["部门"].replace("杭州石亚国", "03部", inplace=True)
+
+    df5["地区"].replace("杭州陈靓", "省级", inplace=True)
+    df5["地区编码"].replace("杭州陈靓", "0301", inplace=True)
+    df5["负责人"].replace("杭州陈靓", "姜立民", inplace=True)
+    df5["部门"].replace("杭州陈靓", "03部", inplace=True)
+
+    df5["地区"].replace("杭州沈剑芳", "杭州", inplace=True)
+    df5["地区编码"].replace("杭州沈剑芳", "0302", inplace=True)
+    df5["负责人"].replace("杭州沈剑芳", "沈剑芳", inplace=True)
+    df5["部门"].replace("杭州沈剑芳", "03部", inplace=True)
+
+    df5["地区"].replace("杭州周海波", "杭州", inplace=True)
+    df5["地区编码"].replace("杭州周海波", "0302", inplace=True)
+    df5["负责人"].replace("杭州周海波", "沈剑芳", inplace=True)
+    df5["部门"].replace("杭州周海波", "03部", inplace=True)
+
+    df5["地区"].replace("嘉兴阮芳", "嘉湖", inplace=True)
+    df5["地区编码"].replace("嘉兴阮芳", "0303", inplace=True)
+    df5["负责人"].replace("嘉兴阮芳", "阮芳", inplace=True)
+    df5["部门"].replace("嘉兴阮芳", "03部", inplace=True)
+
+    df5["地区"].replace("湖州陈荣斌", "嘉湖", inplace=True)
+    df5["地区编码"].replace("湖州陈荣斌", "0303", inplace=True)
+    df5["负责人"].replace("湖州陈荣斌", "阮芳", inplace=True)
+    df5["部门"].replace("湖州陈荣斌", "03部", inplace=True)
+
+    df5["地区"].replace("晋江运城郑良", "晋江运城", inplace=True)
+    df5["地区编码"].replace("晋江运城郑良", "0304", inplace=True)
+    df5["负责人"].replace("晋江运城郑良", "郑良", inplace=True)
+    df5["部门"].replace("晋江运城郑良", "03部", inplace=True)
+  ####四部
+
+    df5["地区"].replace("南京高跃", "南京1", inplace=True)
+    df5["地区编码"].replace("南京高跃", "0401", inplace=True)
+    df5["负责人"].replace("南京高跃", "高跃", inplace=True)
+    df5["部门"].replace("南京高跃", "04部", inplace=True)
+
+    df5["地区"].replace("南京阮建锋", "南京2", inplace=True)
+    df5["地区编码"].replace("南京阮建锋", "0402", inplace=True)
+    df5["负责人"].replace("南京阮建锋", "阮建锋", inplace=True)
+    df5["部门"].replace("南京阮建锋", "04部", inplace=True)
+
+    df5["地区"].replace("南京刘纪彬", "南京3", inplace=True)
+    df5["地区编码"].replace("南京刘纪彬", "0403", inplace=True)
+    df5["负责人"].replace("南京刘纪彬", "刘纪彬", inplace=True)
+    df5["部门"].replace("南京刘纪彬", "04部", inplace=True)
+
+    df5["地区"].replace("南京陈豪", "南京4", inplace=True)
+    df5["地区编码"].replace("南京陈豪", "0404", inplace=True)
+    df5["负责人"].replace("南京陈豪", "陈豪", inplace=True)
+    df5["部门"].replace("南京陈豪", "04部", inplace=True)
+
+  ###五部
+    df5["地区"].replace("南通朱一亦", "南通1", inplace=True)
+    df5["地区编码"].replace("南通朱一亦", "0501", inplace=True)
+    df5["负责人"].replace("南通朱一亦", "李国旺 朱一亦", inplace=True)
+    df5["部门"].replace("南通朱一亦", "05部", inplace=True)
+
+    df5["地区"].replace("南通王峥骅", "南通2", inplace=True)
+    df5["地区编码"].replace("南通王峥骅", "0502", inplace=True)
+    df5["负责人"].replace("南通王峥骅", "李国旺 王铮骅", inplace=True)
+    df5["部门"].replace("南通王峥骅", "05部", inplace=True)
+
+    df5["地区"].replace("盐城", "盐城", inplace=True)
+    df5["地区编码"].replace("盐城", "0503", inplace=True)
+    df5["负责人"].replace("盐城", "岑潭泽 潘前进", inplace=True)
+    df5["部门"].replace("盐城", "05部", inplace=True)
+
+    df5["地区"].replace("连云港", "连云港", inplace=True)
+    df5["地区编码"].replace("连云港", "0504", inplace=True)
+    df5["负责人"].replace("连云港", "胡士艳 姜健", inplace=True)
+    df5["部门"].replace("连云港", "05部", inplace=True)
+
+  ###六部
+
+    df5["地区"].replace("上海1", "上海1", inplace=True)
+    df5["地区编码"].replace("上海1", "0601", inplace=True)
+    df5["负责人"].replace("上海1", "汤俊", inplace=True)
+    df5["部门"].replace("上海1", "06部", inplace=True)
+
+    df5["地区"].replace("上海2", "上海2", inplace=True)
+    df5["地区编码"].replace("上海2", "0602", inplace=True)
+    df5["负责人"].replace("上海2", "邬幼波", inplace=True)
+    df5["部门"].replace("上海2", "06部", inplace=True)
+
+  ####七部
+
+    df5["地区"].replace("苏州", "苏州", inplace=True)
+    df5["地区编码"].replace("苏州", "0701", inplace=True)
+    df5["负责人"].replace("苏州", "陈凯", inplace=True)
+    df5["部门"].replace("苏州", "07部", inplace=True)
+
+    df5["地区"].replace("苏州市郊", "苏郊", inplace=True)
+    df5["地区编码"].replace("苏州市郊", "0702", inplace=True)
+    df5["负责人"].replace("苏州市郊", "吕楠", inplace=True)
+    df5["部门"].replace("苏州市郊", "07部", inplace=True)
+
+
+   ####八部
+
+    df5["地区"].replace("扬泰1", "扬泰1", inplace=True)
+    df5["地区编码"].replace("扬泰1", "0801", inplace=True)
+    df5["负责人"].replace("扬泰1", "姜海涛", inplace=True)
+    df5["部门"].replace("扬泰1", "08部", inplace=True)
+
+    df5["地区"].replace("扬泰2", "扬泰2", inplace=True)
+    df5["地区编码"].replace("扬泰2", "0802", inplace=True)
+    df5["负责人"].replace("扬泰2", "吕淳昱", inplace=True)
+    df5["部门"].replace("扬泰2", "08部", inplace=True)
+
+    df5["地区"].replace("扬泰3", "扬泰3", inplace=True)
+    df5["地区编码"].replace("扬泰3", "0803", inplace=True)
+    df5["负责人"].replace("扬泰3", "胡霞", inplace=True)
+    df5["部门"].replace("扬泰3", "08部", inplace=True)
+
+
+   ####九部
+
+    df5["地区"].replace("徐州于博", "徐州", inplace=True)
+    df5["地区编码"].replace("徐州于博", "0901", inplace=True)
+    df5["负责人"].replace("徐州于博", "唐维洲 于博", inplace=True)
+    df5["部门"].replace("徐州于博", "09部", inplace=True)
+
+    df5["地区"].replace("徐州张浩", "徐州", inplace=True)
+    df5["地区编码"].replace("徐州张浩", "0901", inplace=True)
+    df5["负责人"].replace("徐州张浩", "唐维洲 于博", inplace=True)
+    df5["部门"].replace("徐州张浩", "09部", inplace=True)
+
+    df5["地区"].replace("宿迁", "宿迁", inplace=True)
+    df5["地区编码"].replace("宿迁", "0902", inplace=True)
+    df5["负责人"].replace("宿迁", "赵晨阳 王涛", inplace=True)
+    df5["部门"].replace("宿迁", "09部", inplace=True)
+
+    df5["地区"].replace("淮安", "淮安", inplace=True)
+    df5["地区编码"].replace("淮安", "0903", inplace=True)
+    df5["负责人"].replace("淮安", "赵晨阳 白虹", inplace=True)
+    df5["部门"].replace("淮安", "09部", inplace=True)
+
+
+    ####十部
+
+    df5["地区"].replace("常州", "常州", inplace=True)
+    df5["地区编码"].replace("常州", "1001", inplace=True)
+    df5["负责人"].replace("常州", "吴羚", inplace=True)
+    df5["部门"].replace("常州", "10部", inplace=True)
+
+    df5["地区"].replace("镇江", "镇江", inplace=True)
+    df5["地区编码"].replace("镇江", "1002", inplace=True)
+    df5["负责人"].replace("镇江", "周丹", inplace=True)
+    df5["部门"].replace("镇江", "10部", inplace=True)
+
+    df5["地区"].replace("常镇", "常镇", inplace=True)
+    df5["地区编码"].replace("常镇", "1003", inplace=True)
+    df5["负责人"].replace("常镇", "于亚惠", inplace=True)
+    df5["部门"].replace("常镇", "10部", inplace=True)
+
+   ####十一部
+
+    df5["地区"].replace("绍兴龚群波", "绍兴", inplace=True)
+    df5["地区编码"].replace("绍兴龚群波", "1101", inplace=True)
+    df5["负责人"].replace("绍兴龚群波", "龚群波", inplace=True)
+    df5["部门"].replace("绍兴龚群波", "11部", inplace=True)
+
+    df5["地区"].replace("衢州", "金衢", inplace=True)
+    df5["地区编码"].replace("衢州", "1102", inplace=True)
+    df5["负责人"].replace("衢州", "胡迪锋", inplace=True)
+    df5["部门"].replace("衢州", "11部", inplace=True)
+
+    df5["地区"].replace("金华", "金衢", inplace=True)
+    df5["地区编码"].replace("金华", "1102", inplace=True)
+    df5["负责人"].replace("金华", "胡迪锋", inplace=True)
+    df5["部门"].replace("金华", "11部", inplace=True)
+
+   ####十二部
+    df5["地区"].replace("无锡裘涌", "无锡1", inplace=True)
+    df5["地区编码"].replace("无锡裘涌", "1201", inplace=True)
+    df5["负责人"].replace("无锡裘涌", "裘涌", inplace=True)
+    df5["部门"].replace("无锡裘涌", "12部", inplace=True)
+
+    df5["地区"].replace("无锡张立伟、赵飞", "无锡2", inplace=True)
+    df5["地区编码"].replace("无锡张立伟、赵飞", "1202", inplace=True)
+    df5["负责人"].replace("无锡张立伟、赵飞", "张立伟 赵飞", inplace=True)
+    df5["部门"].replace("无锡张立伟、赵飞", "12部", inplace=True)
+
+    ####调拨
+
+    df5["地区"].replace("北京", "调拨", inplace=True)
+    df5["地区编码"].replace("北京", "1301", inplace=True)
+    df5["负责人"].replace("北京", "孙婷婷", inplace=True)
+    df5["部门"].replace("北京", "调拨", inplace=True)
+
+    df5["地区"].replace("生化分销", "调拨", inplace=True)
+    df5["地区编码"].replace("生化分销", "1301", inplace=True)
+    df5["负责人"].replace("生化分销", "孙婷婷", inplace=True)
+    df5["部门"].replace("生化分销", "调拨", inplace=True)
+
+    df5["地区"].replace("调拨", "调拨", inplace=True)
+    df5["地区编码"].replace("调拨", "1301", inplace=True)
+    df5["负责人"].replace("调拨", "孙婷婷", inplace=True)
+    df5["部门"].replace("调拨", "调拨", inplace=True)
+
+    df5["地区"].replace("维修部", "调拨", inplace=True)
+    df5["地区编码"].replace("维修部", "1301", inplace=True)
+    df5["负责人"].replace("维修部", "孙婷婷", inplace=True)
+    df5["部门"].replace("维修部", "调拨", inplace=True)
+
+    df6 = df5[df5["部门"] != "关联企业"]
+
+
+
+    tkinter.messagebox.showinfo("提醒", "请选择英克销售发票明细（新试剂）源文件");
+    # 加入开票明细
+
+    df51 = pd.read_excel(tkinter.filedialog.askopenfilename());  # 630修改为手工读路径
+
+    df52 = df51.fillna(0)
+    df53 = df52.drop(df52.index[[0, 1]], axis=0);
+
+    df53["仪器开票合计"] = df53["03原厂仪器"] + df53["04采购平台仪器"] + df53["0501国产辅助配置"] + df53["0502流水线辅助配置"]
+
+    df53["非仪器开票合计"] = df53["010101免疫（代理）"] + df53["010102特定蛋白（代理）"] + df53["010103血球（代理）"] + df53["010104普通生化（代理）"] \
+                     + df53["010105AU生化（代理）"] + df53["010106利德曼生化（代理）"] + df53["010107尿液（代理）"] + df53["010109微生物（代理）"] + \
+                     df53["010110索灵（代理BC）"] \
+                     + df53["010111免疫（AMH）"] + df53["010201血凝（代理）"] + df53["0103lmmucor"] + df53["0104索灵"] + df53[
+                         "010501质控试剂（代理）"] + df53["010502伯乐其它试剂"] \
+                     + df53["010601BNP试剂（代理）"] + df53["010701血气（代理）"] + df53["0108苏医（代理BC血球质控）"] + df53["020101干式生化"] + df3[
+                         "020102普通生化"] \
+                     + df53["020103血气"] + df53["020104特殊生化"] + df53["020201血球"] + df53["020202血凝"] + df53["020203尿液"] + df53[
+                         "020204血库"] + df53["020206体液"] \
+                     + df53["020301发光"] + df53["020302特定蛋白"] + df53["020303酶免类"] + df53["020304其它免疫"] + df53["020305厦门万泰"] + \
+                     df53["0204微生物"] + df53["0205药字号"] \
+                     + df53["0206分子诊断"] + df53["0207病理科"] + df53["0208采购平台其它"] + df53["0209质控"] + df53["06软件"] + df53["07配件"] \
+                     + df53["08其它业务"] + df53["0901基因试剂（自产）"] + df53["0902基因试剂（其它厂家）"] + df53["1101强盛生化"] + df53[
+                         "1201沃文特免疫"] + df53["1202沃文特其他"] \
+                     + df53["99其它"]
+
+    df54 = df53.drop(["Unnamed: 1", "Unnamed: 2", "Unnamed: 3"], axis=1)  # 删列
+
+    df55 = df54.groupby(["Unnamed: 0"], as_index=False)["非仪器开票合计", "仪器开票合计"].sum();
+
+    df55["地区"] = df55["Unnamed: 0"]
+    df55["负责人"] = df55["Unnamed: 0"]
+    df55["地区编码"] = df55["Unnamed: 0"]
+    df55["部门"] = df55["Unnamed: 0"]
+
+    df55["地区"].replace("温州葛瑞", "温州1", inplace=True)
+    df55["地区编码"].replace("温州葛瑞", "0101", inplace=True)
+    df55["负责人"].replace("温州葛瑞", "葛瑞", inplace=True)
+    df55["部门"].replace("温州葛瑞", "01部", inplace=True)
+
+    df55["地区"].replace("台州唐惠", "台州1", inplace=True)
+    df55["地区编码"].replace("台州唐惠", "0103", inplace=True)
+    df55["负责人"].replace("台州唐惠", "唐惠", inplace=True)
+    df55["部门"].replace("台州唐惠", "01部", inplace=True)
+
+    df55["地区"].replace("温州潘磊", "温州2", inplace=True)
+    df55["地区编码"].replace("温州潘磊", "0102", inplace=True)
+    df55["负责人"].replace("温州潘磊", "潘磊", inplace=True)
+    df55["部门"].replace("温州潘磊", "01部", inplace=True)
+
+    df55["地区"].replace("台州胡文魁", "台州2", inplace=True)
+    df55["地区编码"].replace("台州胡文魁", "0104", inplace=True)
+    df55["负责人"].replace("台州胡文魁", "胡文魁", inplace=True)
+    df55["部门"].replace("台州胡文魁", "01部", inplace=True)
+
+    df55["地区"].replace("丽水", "丽水", inplace=True)
+    df55["地区编码"].replace("丽水", "0105", inplace=True)
+    df55["负责人"].replace("丽水", "方汝泼", inplace=True)
+    df55["部门"].replace("丽水", "01部", inplace=True)
+
+    #####一部完毕
+    df55["地区"].replace("宁波市区", "宁波", inplace=True)
+    df55["地区编码"].replace("宁波市区", "0201", inplace=True)
+    df55["负责人"].replace("宁波市区", "丁玲", inplace=True)
+    df55["部门"].replace("宁波市区", "02部", inplace=True)
+
+    df55["地区"].replace("舟山北仑", "舟山北仑", inplace=True)
+    df55["地区编码"].replace("舟山北仑", "0202", inplace=True)
+    df55["负责人"].replace("舟山北仑", "高大勇", inplace=True)
+    df55["部门"].replace("舟山北仑", "02部", inplace=True)
+
+    df55["地区"].replace("慈溪余姚镇海", "北三县", inplace=True)
+    df55["地区编码"].replace("慈溪余姚镇海", "0203", inplace=True)
+    df55["负责人"].replace("慈溪余姚镇海", "陆金耀", inplace=True)
+    df55["部门"].replace("慈溪余姚镇海", "02部", inplace=True)
+
+    df55["地区"].replace("奉化宁海象山", "南三县", inplace=True)
+    df55["地区编码"].replace("奉化宁海象山", "0204", inplace=True)
+    df55["负责人"].replace("奉化宁海象山", "吴燕江", inplace=True)
+    df55["部门"].replace("奉化宁海象山", "02部", inplace=True)
+    ####三部####
+
+    df55["地区"].replace("杭州姜立民", "省级", inplace=True)
+    df55["地区编码"].replace("杭州姜立民", "0301", inplace=True)
+    df55["负责人"].replace("杭州姜立民", "姜立民", inplace=True)
+    df55["部门"].replace("杭州姜立民", "03部", inplace=True)
+
+    df55["地区"].replace("杭州石亚国", "省级", inplace=True)
+    df55["地区编码"].replace("杭州石亚国", "0301", inplace=True)
+    df55["负责人"].replace("杭州石亚国", "姜立民", inplace=True)
+    df55["部门"].replace("杭州石亚国", "03部", inplace=True)
+
+    df55["地区"].replace("杭州陈靓", "省级", inplace=True)
+    df55["地区编码"].replace("杭州陈靓", "0301", inplace=True)
+    df55["负责人"].replace("杭州陈靓", 
