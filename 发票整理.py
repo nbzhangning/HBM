@@ -77,10 +77,6 @@ def appendStr1():
                  index=False)  # 自动输出
     df302.to_excel("本次认证失败明细" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx", sheet_name="sheet1",
                    index=False)  # 自动输出
-    #df8.to_excel(excel_writer=tkinter.filedialog.asksaveasfilename(title="请创建或者选择一个保存数据的Excel文件",
-     #                                                              filetypes=[("Microsoft Excel文件", "*.xlsx"),
-      #                                                                        ("Microsoft Excel 97-2003 文件", "*.xls")],
-      #                                                             defaultextension=".xls"),index=False);
 
     tkinter.messagebox.showinfo("运行结果","需认证整理成功!");
  except Exception as error:
@@ -136,10 +132,7 @@ def appendStr2():
                  index=False)  # 自动输出
     df302.to_excel("本次认证失败明细" + str(datetime.datetime.now().strftime('%Y%m%d')) + ".xlsx", sheet_name="sheet1",
                    index=False)  # 自动输出
-    #df8.to_excel(excel_writer=tkinter.filedialog.asksaveasfilename(title="请创建或者选择一个保存数据的Excel文件",
-     #                                                              filetypes=[("Microsoft Excel文件", "*.xlsx"),
-      #                                                                        ("Microsoft Excel 97-2003 文件", "*.xls")],
-       #                                                            defaultextension=".xls"),index=False);
+
 
     tkinter.messagebox.showinfo("运行结果","需认证整理成功!");
  except Exception as error:
