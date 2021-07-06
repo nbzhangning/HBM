@@ -7,7 +7,7 @@ import json
 
 data = {
     "application_id": 1000001,
-    "application_secret": "ca1leod3ojCcWmk8uy62MhPKT2QKfjklaswqtnjiuyt",
+    "application_secret": "8888",
     "expired": 31536000
 }
 headers = {'Content-Type': 'application/json',
@@ -43,19 +43,15 @@ os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.UTF8'
 os.environ['path'] = r'c:\instantclient_19_3'
 
 # 查询操作（查）
-# db = oracle.connect('kang/kang123@172.16.24.246:1521/ORCLYC')  # 数据库连接
-# db = oracle.connect('heseas/kingdee@172.16.24.223:1521/ORCLEAS')  # 数据库连接
-db = oracle.connect('heseas', 'kingdee', '172.16.24.223:1521/easorcl')
+
+db = oracle.connect('heseas', '9999', '172.16.24.223:1521/eas99')
 cursor = db.cursor()  # 创建cursor
 
 sql = "SELECT a.fname_l2 客户名称,b.fname_l2 集团名称,ach.cfykcustomer 英克代码,a.fnumber 金蝶编码,c.FNUMBER 集团编码,a.FSIMPLENAME 类型 FROM CT_CUS_CustomerMapping ach " \
       "inner join t_bd_customer a on ach.cfeascustomerid=a.fid inner join t_bd_generalasstacttype b on ach.cfeasjtid=b.fid " \
       "inner join t_bd_generalasstacttype c on ach.cfeasjtid=c.fid where ach.cfykcustomer is not null order by ach.cfykcustomer"
 cursor.execute(sql)
-# db.rollback()
-# print(cursor.execute(sql))
-# db.commit()
-# db.close()
+
 
 item_list = []
 item_list1 = []
@@ -101,32 +97,6 @@ if cursor.fetchone:  # 返回值是单个的元组,也就是一行记录,如果�
     # item_list3 = item_list1[-1]
     response2 = requests.post(url=url_add, json={"items": item_list2}, headers=headers_hbs);
     print(response2)
-
-    # 回写回数据库做写入标记
-
-    # sleep(5)
-    # response3 = requests.post(url=url_add, json={"items": item_list3}, headers=headers_hbs);
-    # print(response3)
-
-    # print({"items": item_list})
-# b = [item_list[i:i + 2] for i in range(0, len(item_list), 2)]
-#
-# list1 = ','.join(str(i) for i in b)
-# print({"items": list1})
-
-
-###
-###写入表头并POST
-# response1 = requests.post(url=url_add, json=data1, headers=headers_hbs);
-
-# response1 = requests.post(url=url_add, json={"items": item_list}, headers=headers_hbs);
-# print(response1)
-
-##回写
-# df2 = response1.text
-# df3 = json.loads(df2)
-# new_item_id = df3['item_id']
-# print(new_item_id)
 
 
 
